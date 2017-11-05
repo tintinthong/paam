@@ -1,15 +1,11 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+#/diversity/
 
 library(shiny)
+library(igraph)
+library(ineq)
+source("../../dist/pareto.R")
+specify_decimal <- function(x, k) trimws(format(round(x, k), nsmall=k))
 
-# Define UI for application that draws a histogram
 ui <- fluidPage(
    
    # Application title
@@ -61,55 +57,34 @@ ui <- fluidPage(
                  plotOutput("distPlot2"),
                  plotOutput("distPlot3")
         )
-         #plotOutput("distPlot")
       )
    )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  
-   library(ineq)
-  #pareto library 
-  #diversity library 
-  
-  specify_decimal <- function(x, k) trimws(format(round(x, k), nsmall=k))
    
-   #x<-rlnorm(n,0,2)
   dataInputmain <- reactive({
     rpareto(input$n,input$alpha,input$xmin)
-    #diversity(x,prob1,)
   })
   
   dataInputlor <- reactive({
     Lc(dataInputmain())
-    #diversity(x,prob1,)
   })
   
-   
-   #ans$gini_before
-   #ans$gini_after
    dataInput1 <- reactive({
      diversity(dataInputmain(),prob=c(input$p1,input$p2),percent=input$pool)
-     #diversity(x,prob1,)
    })
    
    
    output$distPlot <- renderPlot({
-      # generate bins based on input$bins from ui.R
-      #x    <- faithful[, 2] 
-      #dataInput()$gini_before
-      #dataInput()$gini_after
-      #dataInput()$rank_change
-      #print(x)
-     #str(dataInput1())
+
       bins <- seq(min(dataInput1()$x), max(dataInput1()$x), length.out = input$bins + 1)
       
       # draw the histogram with the specified number of bins
       place<-hist(dataInput1()$x, breaks = bins,plot=FALSE )
-      hist(dataInput1()$x, breaks = bins, col = 'darkred',xlim=c(1,max(dataInput1()$x)), border = 'white',xlab="Wealth",main="Histogram of wealth(before diversity reward)",ylim=c(0,max(place$counts)))
+      hist(dataInput1()$x, breaks = bins, col = 'indianred1',xlim=c(1,max(dataInput1()$x)), border = 'white',xlab="Wealth",main="Histogram of wealth(before diversity reward)",ylim=c(0,max(place$counts)))
       
-      #hist(dataInput1()$x,ylim=c(0,1000), breaks = bins,xlim=c(1,max(dataInput1()$x)), col = 'darkred', border = 'white',xlab="Wealth",main="Histogram of wealth(before diversity reward)")
       abline(v=dataInput1()$quant[1])
       abline(v=dataInput1()$quant[2])
       text(dataInput1()$quant[1],1,paste(input$p1),pos=2)
@@ -119,26 +94,21 @@ server <- function(input, output) {
      
      WC<-dataInput1()$WC
      bins <- seq(min(WC), max(WC), length.out = input$bins + 1)
-     # draw the histogram with the specified number of bins
      place<-hist(WC, breaks = bins,plot=FALSE )
-     hist(WC, breaks = bins, col = 'darkblue',xlim=c(1,max(dataInput1()$x)), border = 'white',xlab="Wealth",main="Histogram of wealth(after diversity reward)",ylim=c(0,max(place$counts)))
+     
+     # draw the histogram with the specified number of bins
+     hist(WC, breaks = bins, col = 'lightblue',xlim=c(1,max(dataInput1()$x)), border = 'white',xlab="Wealth",main="Histogram of wealth(after diversity reward)",ylim=c(0,max(place$counts)))
     
    })
    output$distPlot3<- renderPlot({
-     # generate bins based on input$bins from ui.R
-     #x    <- faithful[, 2] 
-     #bins <- seq(min(x), max(x), length.out = input$bins + 1)
      lor_WC<-Lc(dataInput1()$WC)
-     #class(WC_L)<-"Lc"
      lor<-dataInputlor()
+     
      # draw the histogram with the specified number of bins
      plot(lor,xlab="Percentage of nodes",ylab="Percentage of wealth of network",col="red")
      lines(lor_WC$p,lor_WC$L,col="blue")
-     #print(which.min(abs(Lc(x)$p-input$p1)))
      abline(v=input$p1,h=lor$L[which.min(abs(lor$p-input$p1))])
      abline(v=input$p2,h=lor$L[which.min(abs(lor$p-input$p2))])
-     #abline(v=input$p1,h=Lc(x)$L[which(min(abs(Lc(x)$p-input$p1)) )])
-     #abline(h=input$p1,v=dataInput1()$quant[1])
      text(0.2,0.6,paste("Percent Rank Preserved ",specify_decimal(dataInput1()$rank_change,4) ))
      text(0.2,0.8,paste("Gini Index Before= ",specify_decimal(dataInput1()$gini_before,4)) )
      text(0.2,0.7,paste("Gini Index After= ",specify_decimal(dataInput1()$gini_after,4)))

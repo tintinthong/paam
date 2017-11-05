@@ -172,16 +172,16 @@ sum(rank_before==rank_after)/length(V(graph_union)$wealth_vector_trickle)
 hist(c(WC_1,WC_2,WC_3))
 
 
+#try with missing values
+
 #this function uses Lc
 #x: wealth vector
 #prob: proportion of wealth
 #percent: percent of reward pool
 diversity<-function(x,prob=c(0.3,0.9),percent=0.1){
   
-  print("the begining---------------------------------------------------------")
   
   #set parameters
-  #par(xpd=F)
   if(prob[2]<=prob[1]){
     stop("prob2<prob1")
   }
@@ -198,16 +198,10 @@ diversity<-function(x,prob=c(0.3,0.9),percent=0.1){
   
   #set order
   o<-order(x)
-  #find the corresponding quantiles from prob (proportion wealth)
-  #q2<-x[o][which(Lc(x)$L>prob[2])[1]]
-  #q1<-x[o][which(Lc(x)$L>prob[1])[1]]
   q1<-tail(x[o][which(Lc(x)$L<prob[1])],1)
   q2<-tail(x[o][which(Lc(x)$L<prob[2])],1)
   quant<-c(q1,q2)
-  
-  #visualise
-  #hist(x)
-  #abline(v=quant)
+
   
   #define wealth_classes
   WC_1<-x[x<=quant[1]]
@@ -215,15 +209,16 @@ diversity<-function(x,prob=c(0.3,0.9),percent=0.1){
   WC_3<-x[ (x>quant[2]) ]
 
   #change ranking
+  #-rank is the scoreboard, order is the index
   rank_before<-rank(c(WC_1,WC_2,WC_3)) #before
   
-  #make taus
+  #make taus(how much to add to a particular class)
   tau1<-quantile(WC_2)[2]-quantile(WC_1)[4]
-  tau2<-quantile(WC_3)[2]-quantile(WC_2)[4] #should re-define tau2 such that it is less than tau1
+  tau2<-quantile(WC_3)[2]-quantile(WC_2)[4] 
+  #tau2 should be defined such that it is less than tau1
   
   #make reward pool
   reward_pool<-percent*sum(x)
-  
   
   #if we use tau1
   if(tau1*length(WC_1)>reward_pool){
@@ -242,7 +237,8 @@ diversity<-function(x,prob=c(0.3,0.9),percent=0.1){
       
       if(reward_pool/length(WC_2)>tau1/length(WC_1)){ 
         print(paste("giving all of reward pool to WC_2","value per unit=",reward_pool/length(WC_2),"total=",reward_pool) )
-        WC_2<-WC_2+0.8*tau1 #the problem with this is that tau1 may very well be worse
+        #WC_2<-WC_2+0.8*tau1 
+        WC_2<-WC_2+
         reward_pool<-0
       }
       
@@ -289,8 +285,11 @@ diversity<-function(x,prob=c(0.3,0.9),percent=0.1){
   
 }
 #reward pool just doesn
+debug(diversity)
 
 debug(diversity)
 diversity(rgamma(100,1),prob=c(0.6,0.2))
 diversity(rgamma(100,1,2))
 diversity(rpareto(100000,2,2))
+
+
