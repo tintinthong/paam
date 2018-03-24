@@ -1,5 +1,5 @@
 Proportional Attribution and Allocation Model (paam)
-
+justin thong
 Parts of the model:
 
 1)Wealth trickle 
